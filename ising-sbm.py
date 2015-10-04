@@ -13,11 +13,16 @@ def main(verbose=False):
                [30, 0.9, 0.5, 0.01, -5.0, 0.5],
                [30, 0.9, 0.5, 0.01, -15.0, 0.5]]
     plot_list = []
+
+    # Use same adjacency matrix for all iterations of other variables.
+    n = 30
+    adj_matrix_intensity = 0.5
+    adj = sample_adj_matrix(n, adj_matrix_intensity)
+
     for v in var_set:
         n, p_pos, p_neg, p_btwn, theta_fill_value, adj_matrix_intensity = (
             var_set[0])
-        a = sample_a(n, p_pos, p_neg, p_btwn, theta_fill_value,
-                     adj_matrix_intensity, verbose)
+        a = sample_a(n, p_pos, p_neg, p_btwn, theta_fill_value, adj, verbose)
         plot_list.append(a)
 
     visualize(plot_list)
@@ -51,14 +56,13 @@ def visualize(plot_list):
     f6.set_title('theta=-15.0')
 
     # Save figures to directory.
-    path = '/Users/mauricediesendruck/Google Drive/0-LIZHEN RESEARCH/'
+    path = '/Users/mauricediesendruck/Google Drive/0-LIZHEN RESEARCH/ising/'
     os.chdir(path)
-    plt.savefig('fig-'+time.strftime('%Y-%m-%d_%H:%M:%S'))
+    plt.savefig('fig-'+time.strftime('%Y%m%d_%H:%M:%S'))
 
-def sample_a(n, p_pos, p_neg, p_btwn, theta_fill_value,
-             adj_matrix_intensity, verbose):
+def sample_a(n, p_pos, p_neg, p_btwn, theta_fill_value, adj, verbose):
         theta = np.empty([n, n]); theta.fill(theta_fill_value)
-        adj = sample_adj_matrix(n, adj_matrix_intensity)
+        #adj = sample_adj_matrix(n, adj_matrix_intensity)
         z = sample_ising(theta, adj)
         q = build_q_matrix(z, p_pos, p_neg, p_btwn)
         a = sample_sbm(q, n)
