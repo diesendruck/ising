@@ -7,7 +7,7 @@ import time
 
 def main(verbose=False):
     # Use same adjacency matrix for all iterations of other variables.
-    n = 100
+    n = 60
     ami = adj_matrix_intensity = 0.5
     adj = sample_adj_matrix(n, adj_matrix_intensity)
     var_set = [[n, 0.8, 0.7, 0.1, 10.0, ami],
