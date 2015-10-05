@@ -6,18 +6,23 @@ import os
 import time
 
 def main(verbose=False):
-    var_set = [[30, 0.9, 0.5, 0.01, 15.0, 0.5],
-               [30, 0.9, 0.5, 0.01, 5.0, 0.5],
-               [30, 0.9, 0.5, 0.01, 1.0, 0.5],
-               [30, 0.9, 0.5, 0.01, -1.0, 0.5],
-               [30, 0.9, 0.5, 0.01, -5.0, 0.5],
-               [30, 0.9, 0.5, 0.01, -15.0, 0.5]]
-    plot_list = []
-
     # Use same adjacency matrix for all iterations of other variables.
     n = 30
-    adj_matrix_intensity = 0.5
+    ami = adj_matrix_intensity = 0.5
     adj = sample_adj_matrix(n, adj_matrix_intensity)
+    var_set = [[n, 0.8, 0.7, 0.1, 15.0, ami],
+               [n, 0.8, 0.7, 0.1, 5.0, ami],
+               [n, 0.8, 0.7, 0.1, 1.0, ami],
+               [n, 0.8, 0.7, 0.1, -1.0, ami],
+               [n, 0.8, 0.7, 0.1, -5.0, ami],
+               [n, 0.8, 0.7, 0.1, -15.0, ami]]
+    var_set = [[n, 0.8, 0.7, 0.1, 15.0, ami],
+               [n, 0.8, 0.7, 0.1, 15.0, ami],
+               [n, 0.8, 0.7, 0.1, 15.0, ami],
+               [n, 0.8, 0.7, 0.1, 15.0, ami],
+               [n, 0.8, 0.7, 0.1, 15.0, ami],
+               [n, 0.8, 0.7, 0.1, 15.0, ami]]
+    plot_list = []
 
     for v in var_set:
         n, p_pos, p_neg, p_btwn, theta_fill_value, adj_matrix_intensity = (
@@ -25,35 +30,42 @@ def main(verbose=False):
         a = sample_a(n, p_pos, p_neg, p_btwn, theta_fill_value, adj, verbose)
         plot_list.append(a)
 
-    visualize(plot_list)
+    visualize(plot_list, var_set)
     return a
 
-def visualize(plot_list):
+def visualize(plot_list, var_set):
     # Plot test figures.
     fig = plt.figure()
+
+    # Make title using the fixed parameters of the test.
+    vars1 = var_set[0]
+    plt.suptitle((r'$A$-Matrix: '+r'$p_1={}$, '+r'$p_2={}$, '+r'$q={}$, '+
+                  r'$adj.intensity={}$').format(vars1[1], vars1[2],
+                                              vars1[3], vars1[5]))
+
     f1 = fig.add_subplot(231)
     f1.imshow(plot_list[0], interpolation='none', cmap='GnBu')
-    f1.set_title('theta=15.0')
+    f1.set_title(r'$\theta=15.0$')
 
     f2 = fig.add_subplot(232)
     f2.imshow(plot_list[1], interpolation='none', cmap='GnBu')
-    f2.set_title('theta=5.0')
+    f2.set_title(r'$\theta=5.0$')
 
     f3 = fig.add_subplot(233)
     f3.imshow(plot_list[2], interpolation='none', cmap='GnBu')
-    f3.set_title('theta=1.0')
+    f3.set_title(r'$\theta=1.0$')
 
     f4 = fig.add_subplot(234)
     f4.imshow(plot_list[3], interpolation='none', cmap='GnBu')
-    f4.set_title('theta=-1.0')
+    f4.set_title(r'$\theta=-1.0$')
 
     f5 = fig.add_subplot(235)
     f5.imshow(plot_list[4], interpolation='none', cmap='GnBu')
-    f5.set_title('theta=-5.0')
+    f5.set_title(r'$\theta=-5.0$')
 
     f6 = fig.add_subplot(236)
     f6.imshow(plot_list[5], interpolation='none', cmap='GnBu')
-    f6.set_title('theta=-15.0')
+    f6.set_title(r'$\theta=-15.0$')
 
     # Save figures to directory.
     path = '/Users/mauricediesendruck/Google Drive/0-LIZHEN RESEARCH/ising/'
