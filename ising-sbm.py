@@ -4,10 +4,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import time
+from datetime import datetime
 
 def main(verbose=False):
     # Use same adjacency matrix for all iterations of other variables.
-    n = 60
+    n = 50
     ami = adj_matrix_intensity = 0.5
     adj = sample_adj_matrix(n, adj_matrix_intensity)
     var_set = [[n, 0.8, 0.7, 0.1, 10.0, ami],
@@ -16,26 +17,27 @@ def main(verbose=False):
                [n, 0.8, 0.7, 0.1, -1.0, ami],
                [n, 0.8, 0.7, 0.1, -5.0, ami],
                [n, 0.8, 0.7, 0.1, -10.0, ami]]
-    #var_set = [[n, 0.8, 0.7, 0.1, 15.0, ami],
-    #           [n, 0.8, 0.7, 0.1, 15.0, ami],
-    #           [n, 0.8, 0.7, 0.1, 15.0, ami],
-    #           [n, 0.8, 0.7, 0.1, 15.0, ami],
-    #           [n, 0.8, 0.7, 0.1, 15.0, ami],
-    #           [n, 0.8, 0.7, 0.1, 15.0, ami]]
+    var_set = [[n, 0.8, 0.7, 0.1, 15.0, ami],
+               [n, 0.8, 0.7, 0.1, 5.0, ami],
+               [n, 0.8, 0.7, 0.1, 1.0, ami]]
     plot_list = []
+    plot_dict = {0:[], 1:[], 2:[]}
 
-    for v in var_set:
-        n, p_pos, p_neg, p_btwn, theta_fill_value, adj_matrix_intensity = (
-            var_set[0])
-        a = sample_a(n, p_pos, p_neg, p_btwn, theta_fill_value, adj, verbose)
-        plot_list.append(a)
+    for i, v in enumerate(var_set):
+        n, p_pos, p_neg, p_btwn, theta_fill_value, adj_matrix_intensity = v
+        for _ in xrange(5):
+            a = sample_a(n, p_pos, p_neg, p_btwn, theta_fill_value, adj,
+                         verbose)
+            plot_dict[i].append(a)
 
-    visualize(plot_list, var_set)
+    visualize(plot_dict, var_set)
     return a
 
-def visualize(plot_list, var_set):
+def visualize(plot_dict, var_set):
     # Plot test figures.
-    fig = plt.figure()
+    fig = plt.figure(figsize=(8, 8))
+    plt.rcParams['xtick.labelsize'] = 6
+    plt.rcParams['ytick.labelsize'] = 6
 
     # Make title using the fixed parameters of the test.
     vars1 = var_set[0]
@@ -43,34 +45,48 @@ def visualize(plot_list, var_set):
                   r'$adj.intensity={}$').format(vars1[1], vars1[2],
                                               vars1[3], vars1[5]))
 
-    f1 = fig.add_subplot(231)
-    f1.imshow(plot_list[0], interpolation='none', cmap='GnBu')
-    f1.set_title(r'$\theta={}$'.format(var_set[0][4]))
+    f11 = fig.add_subplot(5,3,1)
+    f12 = fig.add_subplot(5,3,4)
+    f13 = fig.add_subplot(5,3,7)
+    f14 = fig.add_subplot(5,3,10)
+    f15 = fig.add_subplot(5,3,13)
+    f11.set_title(r'$\theta={}$'.format(var_set[0][4]))
+    f11.imshow(plot_dict[0][0], interpolation='none', cmap='GnBu')
+    f12.imshow(plot_dict[0][1], interpolation='none', cmap='GnBu')
+    f13.imshow(plot_dict[0][2], interpolation='none', cmap='GnBu')
+    f14.imshow(plot_dict[0][3], interpolation='none', cmap='GnBu')
+    f15.imshow(plot_dict[0][4], interpolation='none', cmap='GnBu')
 
-    f2 = fig.add_subplot(232)
-    f2.imshow(plot_list[1], interpolation='none', cmap='GnBu')
-    f2.set_title(r'$\theta={}$'.format(var_set[1][4]))
 
-    f3 = fig.add_subplot(233)
-    f3.imshow(plot_list[2], interpolation='none', cmap='GnBu')
-    f3.set_title(r'$\theta={}$'.format(var_set[2][4]))
+    f21 = fig.add_subplot(5,3,2)
+    f22 = fig.add_subplot(5,3,5)
+    f23 = fig.add_subplot(5,3,8)
+    f24 = fig.add_subplot(5,3,11)
+    f25 = fig.add_subplot(5,3,14)
+    f21.set_title(r'$\theta={}$'.format(var_set[1][4]))
+    f21.imshow(plot_dict[1][0], interpolation='none', cmap='GnBu')
+    f22.imshow(plot_dict[1][1], interpolation='none', cmap='GnBu')
+    f23.imshow(plot_dict[1][2], interpolation='none', cmap='GnBu')
+    f24.imshow(plot_dict[1][3], interpolation='none', cmap='GnBu')
+    f25.imshow(plot_dict[1][4], interpolation='none', cmap='GnBu')
 
-    f4 = fig.add_subplot(234)
-    f4.imshow(plot_list[3], interpolation='none', cmap='GnBu')
-    f4.set_title(r'$\theta={}$'.format(var_set[3][4]))
-
-    f5 = fig.add_subplot(235)
-    f5.imshow(plot_list[4], interpolation='none', cmap='GnBu')
-    f5.set_title(r'$\theta={}$'.format(var_set[4][4]))
-
-    f6 = fig.add_subplot(236)
-    f6.imshow(plot_list[5], interpolation='none', cmap='GnBu')
-    f6.set_title(r'$\theta={}$'.format(var_set[5][4]))
+    f31 = fig.add_subplot(5,3,3)
+    f32 = fig.add_subplot(5,3,6)
+    f33 = fig.add_subplot(5,3,9)
+    f34 = fig.add_subplot(5,3,12)
+    f35 = fig.add_subplot(5,3,15)
+    f31.set_title(r'$\theta={}$'.format(var_set[2][4]))
+    f31.imshow(plot_dict[2][0], interpolation='none', cmap='GnBu')
+    f32.imshow(plot_dict[2][1], interpolation='none', cmap='GnBu')
+    f33.imshow(plot_dict[2][2], interpolation='none', cmap='GnBu')
+    f34.imshow(plot_dict[2][3], interpolation='none', cmap='GnBu')
+    f35.imshow(plot_dict[2][4], interpolation='none', cmap='GnBu')
 
     # Save figures to directory.
     path = '/Users/mauricediesendruck/Google Drive/0-LIZHEN RESEARCH/ising/'
     os.chdir(path)
-    plt.savefig('fig-'+time.strftime('%Y%m%d_%H:%M:%S'))
+    plt.savefig('fig-'+time.strftime('%Y%m%d_%H:%M:%S')+'.png', format='png',
+                dpi=1200)
 
 def sample_a(n, p_pos, p_neg, p_btwn, theta_fill_value, adj, verbose):
         theta = np.empty([n, n]); theta.fill(theta_fill_value)
@@ -78,6 +94,7 @@ def sample_a(n, p_pos, p_neg, p_btwn, theta_fill_value, adj, verbose):
         z = sample_ising(theta, adj)
         q = build_q_matrix(z, p_pos, p_neg, p_btwn)
         a = sample_sbm(q, n)
+        a = a[:, np.argsort(z)]
 
         if verbose==True:
             summarize(n, p_pos, p_neg, p_btwn, theta_fill_value,
@@ -250,8 +267,8 @@ def sample_ising(theta, adj):
     """
     # Set up parameters and variable storage.
     n = len(theta)  # Number of nodes in graph.
-    num_trials = 500  # Number of times to run the Gibbs sampler.
-    burn_in = 100  # Number of Gibbs samples to discard; must be < num_trials.
+    num_trials = 600  # Number of times to run the Gibbs sampler.
+    burn_in = 300  # Number of Gibbs samples to discard; must be < num_trials.
     z_chain = np.zeros([num_trials, n])  # Storage for Gibbs samples, by row.
 
     # Initialize and store first configuration of z's.
@@ -288,7 +305,8 @@ def sample_ising(theta, adj):
     return z_sample
 
 
-
+start_time = datetime.now()
 a = main(verbose=False)
+print datetime.now() - start_time
 
 
