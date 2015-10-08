@@ -9,33 +9,34 @@ from datetime import datetime
 def main(verbose=False):
     # Use same adjacency matrix for all iterations of other variables.
     n = 50
+    runs_per_theta = 10
+    num_unique_thetas = 4
     ami = adj_matrix_intensity = 0.5
     adj = sample_adj_matrix(n, adj_matrix_intensity)
-    var_set = [[n, 0.8, 0.7, 0.1, 10.0, ami],
-               [n, 0.8, 0.7, 0.1, 5.0, ami],
-               [n, 0.8, 0.7, 0.1, 1.0, ami],
-               [n, 0.8, 0.7, 0.1, -1.0, ami],
-               [n, 0.8, 0.7, 0.1, -5.0, ami],
-               [n, 0.8, 0.7, 0.1, -10.0, ami]]
-    var_set = [[n, 0.8, 0.7, 0.1, 15.0, ami],
-               [n, 0.8, 0.7, 0.1, 5.0, ami],
-               [n, 0.8, 0.7, 0.1, 1.0, ami]]
-    plot_list = []
-    plot_dict = {0:[], 1:[], 2:[]}
+    var_set = [[n, 0.8, 0.7, 0.01, 100, ami],
+               [n, 0.8, 0.7, 0.01, 10, ami],
+               [n, 0.8, 0.7, 0.01, 1, ami],
+               [n, 0.8, 0.7, 0.01, 0, ami]]
+
+    plot_dict = {i:[] for i in range(num_unique_thetas)}
 
     for i, v in enumerate(var_set):
         n, p_pos, p_neg, p_btwn, theta_fill_value, adj_matrix_intensity = v
-        for _ in xrange(5):
+        for _ in xrange(runs_per_theta):
             a = sample_a(n, p_pos, p_neg, p_btwn, theta_fill_value, adj,
                          verbose)
             plot_dict[i].append(a)
 
-    visualize(plot_dict, var_set)
+    visualize(plot_dict, var_set, runs_per_theta, num_unique_thetas)
     return a
 
-def visualize(plot_dict, var_set):
-    # Plot test figures.
-    fig = plt.figure(figsize=(8, 8))
+def visualize(plot_dict, var_set, runs_per_theta, num_unique_thetas):
+    """Plot test figures."""
+    # Create plot with subplots.
+    fig, axes = plt.subplots(runs_per_theta, num_unique_thetas, figsize=(8,8))
+    axes = axes.ravel()
+
+    # make axis font size small.
     plt.rcParams['xtick.labelsize'] = 6
     plt.rcParams['ytick.labelsize'] = 6
 
@@ -45,42 +46,13 @@ def visualize(plot_dict, var_set):
                   r'$adj.intensity={}$').format(vars1[1], vars1[2],
                                               vars1[3], vars1[5]))
 
-    f11 = fig.add_subplot(5,3,1)
-    f12 = fig.add_subplot(5,3,4)
-    f13 = fig.add_subplot(5,3,7)
-    f14 = fig.add_subplot(5,3,10)
-    f15 = fig.add_subplot(5,3,13)
-    f11.set_title(r'$\theta={}$'.format(var_set[0][4]))
-    f11.imshow(plot_dict[0][0], interpolation='none', cmap='GnBu')
-    f12.imshow(plot_dict[0][1], interpolation='none', cmap='GnBu')
-    f13.imshow(plot_dict[0][2], interpolation='none', cmap='GnBu')
-    f14.imshow(plot_dict[0][3], interpolation='none', cmap='GnBu')
-    f15.imshow(plot_dict[0][4], interpolation='none', cmap='GnBu')
-
-
-    f21 = fig.add_subplot(5,3,2)
-    f22 = fig.add_subplot(5,3,5)
-    f23 = fig.add_subplot(5,3,8)
-    f24 = fig.add_subplot(5,3,11)
-    f25 = fig.add_subplot(5,3,14)
-    f21.set_title(r'$\theta={}$'.format(var_set[1][4]))
-    f21.imshow(plot_dict[1][0], interpolation='none', cmap='GnBu')
-    f22.imshow(plot_dict[1][1], interpolation='none', cmap='GnBu')
-    f23.imshow(plot_dict[1][2], interpolation='none', cmap='GnBu')
-    f24.imshow(plot_dict[1][3], interpolation='none', cmap='GnBu')
-    f25.imshow(plot_dict[1][4], interpolation='none', cmap='GnBu')
-
-    f31 = fig.add_subplot(5,3,3)
-    f32 = fig.add_subplot(5,3,6)
-    f33 = fig.add_subplot(5,3,9)
-    f34 = fig.add_subplot(5,3,12)
-    f35 = fig.add_subplot(5,3,15)
-    f31.set_title(r'$\theta={}$'.format(var_set[2][4]))
-    f31.imshow(plot_dict[2][0], interpolation='none', cmap='GnBu')
-    f32.imshow(plot_dict[2][1], interpolation='none', cmap='GnBu')
-    f33.imshow(plot_dict[2][2], interpolation='none', cmap='GnBu')
-    f34.imshow(plot_dict[2][3], interpolation='none', cmap='GnBu')
-    f35.imshow(plot_dict[2][4], interpolation='none', cmap='GnBu')
+    for i in xrange(num_unique_thetas):
+        for j in xrange(runs_per_theta):
+            start_index = i
+            plot_index = start_index+j*num_unique_thetas
+            axes[start_index].set_title(r'$\theta={}$'.format(var_set[i][4]))
+            axes[plot_index].imshow(plot_dict[i][j],interpolation='none', cmap='GnBu')
+            axes[plot_index].tick_params(labelsize=6)
 
     # Save figures to directory.
     path = '/Users/mauricediesendruck/Google Drive/0-LIZHEN RESEARCH/ising/'
@@ -89,17 +61,17 @@ def visualize(plot_dict, var_set):
                 dpi=1200)
 
 def sample_a(n, p_pos, p_neg, p_btwn, theta_fill_value, adj, verbose):
-        theta = np.empty([n, n]); theta.fill(theta_fill_value)
-        #adj = sample_adj_matrix(n, adj_matrix_intensity)
-        z = sample_ising(theta, adj)
-        q = build_q_matrix(z, p_pos, p_neg, p_btwn)
-        a = sample_sbm(q, n)
-        a = a[:, np.argsort(z)]
+    theta = np.empty([n, n]); theta.fill(theta_fill_value)
+    #adj = sample_adj_matrix(n, adj_matrix_intensity)
+    z = sample_ising(theta, adj)
+    q = build_q_matrix(z, p_pos, p_neg, p_btwn)
+    a = sample_sbm(q, n)
+    a = a[:, np.argsort(z)]
 
-        if verbose==True:
-            summarize(n, p_pos, p_neg, p_btwn, theta_fill_value,
-                      adj_matrix_intensity, adj, z, q, a)
-        return a
+    if verbose==True:
+        summarize(n, p_pos, p_neg, p_btwn, theta_fill_value,
+                  adj_matrix_intensity, adj, z, q, a)
+    return a
 
 def summarize(n, p_pos, p_neg, p_btwn, theta_fill_value, adj_matrix_intensity,
               adj, z, q, a):
@@ -267,7 +239,7 @@ def sample_ising(theta, adj):
     """
     # Set up parameters and variable storage.
     n = len(theta)  # Number of nodes in graph.
-    num_trials = 600  # Number of times to run the Gibbs sampler.
+    num_trials = 500  # Number of times to run the Gibbs sampler.
     burn_in = 300  # Number of Gibbs samples to discard; must be < num_trials.
     z_chain = np.zeros([num_trials, n])  # Storage for Gibbs samples, by row.
 
