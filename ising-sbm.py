@@ -13,13 +13,17 @@ def main(verbose=False):
     num_unique_thetas = 4
     ami = adj_matrix_intensity = 0.5
     adj = sample_adj_matrix(n, adj_matrix_intensity)
+
+    # Create variable set for trial runs.
     var_set = [[n, 0.8, 0.7, 0.01, 100, ami],
                [n, 0.8, 0.7, 0.01, 10, ami],
                [n, 0.8, 0.7, 0.01, 1, ami],
                [n, 0.8, 0.7, 0.01, 0, ami]]
 
+    # Set up storage for sampled plots of each theta value.
     plot_dict = {i:[] for i in range(num_unique_thetas)}
 
+    # Sample several plots for each theta value.
     for i, v in enumerate(var_set):
         n, p_pos, p_neg, p_btwn, theta_fill_value, adj_matrix_intensity = v
         for _ in xrange(runs_per_theta):
@@ -27,6 +31,7 @@ def main(verbose=False):
                          verbose)
             plot_dict[i].append(a)
 
+    # Generate image with results and store to directory.
     visualize(plot_dict, var_set, runs_per_theta, num_unique_thetas)
     return a
 
@@ -36,16 +41,13 @@ def visualize(plot_dict, var_set, runs_per_theta, num_unique_thetas):
     fig, axes = plt.subplots(runs_per_theta, num_unique_thetas, figsize=(8,8))
     axes = axes.ravel()
 
-    # make axis font size small.
-    plt.rcParams['xtick.labelsize'] = 6
-    plt.rcParams['ytick.labelsize'] = 6
-
     # Make title using the fixed parameters of the test.
     vars1 = var_set[0]
     plt.suptitle((r'$A$-Matrix: '+r'$p_1={}$, '+r'$p_2={}$, '+r'$q={}$, '+
                   r'$adj.intensity={}$').format(vars1[1], vars1[2],
                                               vars1[3], vars1[5]))
 
+    # Create subplots with several trials per unique theta.
     for i in xrange(num_unique_thetas):
         for j in xrange(runs_per_theta):
             start_index = i
