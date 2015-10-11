@@ -10,27 +10,31 @@ def main(verbose=False):
     # Use same adjacency matrix for all iterations of other variables.
     n = 50
     runs_per_theta = 10
-    num_unique_thetas = 4
-    ami = adj_matrix_intensity = 0.5
-    adj = sample_adj_matrix(n, adj_matrix_intensity)
+    num_unique_thetas = 6
+    p1 = 0.9
+    p2 = 0.5
+    px = 0.01
 
     # Create variable set for trial runs.
-    var_set = [[n, 0.8, 0.7, 0.01, 100, ami],
-               [n, 0.8, 0.7, 0.01, 10, ami],
-               [n, 0.8, 0.7, 0.01, 1, ami],
-               [n, 0.8, 0.7, 0.01, 0, ami]]
+    var_set = [[n, p1, p2, px, 10],
+               [n, p1, p2, px, 5],
+               [n, p1, p2, px, 1],
+               [n, p1, p2, px, -1],
+               [n, p1, p2, px, -5],
+               [n, p1, p2, px, -10]]
 
     # Set up storage for sampled plots of each theta value.
     plot_dict = {i:[] for i in range(num_unique_thetas)}
 
     # Sample several plots for each theta value.
     for i, v in enumerate(var_set):
-        n, p_pos, p_neg, p_btwn, theta_fill_value, adj_matrix_intensity = v
+        print("sampling "+str(i))
+        n, p_pos, p_neg, p_btwn, theta_fill_value = v
         for _ in xrange(runs_per_theta):
-            a = sample_a(n, p_pos, p_neg, p_btwn, theta_fill_value, adj,
-                         verbose)
+            a = sample_a(n, p_pos, p_neg, p_btwn, theta_fill_value, verbose)
             plot_dict[i].append(a)
 
+    print("visualizing...")
     # Generate image with results and store to directory.
     visualize(plot_dict, var_set, runs_per_theta, num_unique_thetas)
     return a
@@ -42,10 +46,10 @@ def visualize(plot_dict, var_set, runs_per_theta, num_unique_thetas):
     axes = axes.ravel()
 
     # Make title using the fixed parameters of the test.
+    # This is correct, only if all cases in var_set use same p1, p2, q.
     vars1 = var_set[0]
-    plt.suptitle((r'$A$-Matrix: '+r'$p_1={}$, '+r'$p_2={}$, '+r'$q={}$, '+
-                  r'$adj.intensity={}$').format(vars1[1], vars1[2],
-                                              vars1[3], vars1[5]))
+    plt.suptitle((r'$A$-Matrix: '+r'$p_1={}$, '+r'$p_2={}$, '+r'$q={}$').format(
+                  vars1[1], vars1[2], vars1[3]))
 
     # Create subplots with several trials per unique theta.
     for i in xrange(num_unique_thetas):
@@ -57,34 +61,29 @@ def visualize(plot_dict, var_set, runs_per_theta, num_unique_thetas):
             axes[plot_index].tick_params(labelsize=6)
 
     # Save figures to directory.
-    path = '/Users/mauricediesendruck/Google Drive/0-LIZHEN RESEARCH/ising/'
+    path = '/Users/mauricediesendruck/Google Drive/0-LIZHEN RESEARCH/sbm/'
     os.chdir(path)
     plt.savefig('fig-'+time.strftime('%Y%m%d_%H:%M:%S')+'.png', format='png',
                 dpi=1200)
 
-def sample_a(n, p_pos, p_neg, p_btwn, theta_fill_value, adj, verbose):
+def sample_a(n, p_pos, p_neg, p_btwn, theta_fill_value, verbose):
     theta = np.empty([n, n]); theta.fill(theta_fill_value)
-    #adj = sample_adj_matrix(n, adj_matrix_intensity)
-    z = sample_ising(theta, adj)
+    z = sample_ising(theta)
     q = build_q_matrix(z, p_pos, p_neg, p_btwn)
     a = sample_sbm(q, n)
-    a = a[:, np.argsort(z)]
+    a = a[:, np.argsort(z)][np.argsort(z), :]
 
     if verbose==True:
-        summarize(n, p_pos, p_neg, p_btwn, theta_fill_value,
-                  adj_matrix_intensity, adj, z, q, a)
+        summarize(n, p_pos, p_neg, p_btwn, theta_fill_value, z, q, a)
     return a
 
-def summarize(n, p_pos, p_neg, p_btwn, theta_fill_value, adj_matrix_intensity,
-              adj, z, q, a):
+def summarize(n, p_pos, p_neg, p_btwn, theta_fill_value, z, q, a):
     print('N: ', n)
     print('Pr(1): ', p_pos)
     print('Pr(-1): ', p_neg)
     print('Pr(between): ', p_btwn)
     print('Theta fill value: ', theta_fill_value)
-    print('Adjacency matrix intensity: ', adj_matrix_intensity)
     print
-    print(adj)
     print("Z vector: ")
     print(z)
     print("q matrix:")
@@ -226,7 +225,7 @@ def sym_matrix(matrix, part="upper"):
 
     return m
 
-def sample_ising(theta, adj):
+def sample_ising(theta):
     """Given a matrix of agreement parameters, samples binary ising vector.
 
     Samples vector of 1's and -1's from a Gibbs sampled Ising Distribution.
@@ -234,7 +233,6 @@ def sample_ising(theta, adj):
     Args:
         theta: Agreement parameter matrix; one agreement coefficient for each
             pair of nodes.
-        adj: Adjacency matrix of pairwise edge connections (binary).
 
     Returns:
         z_sample: Vector of n values, each either 1 or -1.
@@ -255,12 +253,11 @@ def sample_ising(theta, adj):
         for i in range(n):
             # Sample each z from its full Ising model conditional.
             # pi(z_i|z_not_i) = (1/C)*exp(sum(theta*z_i*z_j)), for j's with
-            #     edges to i.
-            # Use adjacency matrix as indicator to pick j's.
+            #     edges to i [...actually, edge condition irrelevant here].
             # Evaluate for z_i=-1 and z_i=1, normalize, then sample.
-            summation_terms_neg1 = [-adj[i, j]*theta[i, j]*z[j]
+            summation_terms_neg1 = [-1*theta[i, j]*z[j]
                 if j>i else 0 for j in range(n)]
-            summation_terms_pos1 = [+adj[i, j]*theta[i, j]*z[j]
+            summation_terms_pos1 = [1*theta[i, j]*z[j]
                 if j>i else 0 for j in range(n)]
             pn = unnorm_prob_neg1 = np.exp(sum(summation_terms_neg1))
             pp = unnorm_prob_pos1 = np.exp(sum(summation_terms_pos1))
