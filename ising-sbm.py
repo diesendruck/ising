@@ -9,10 +9,10 @@ from datetime import datetime
 def main(verbose=False):
     # Use same adjacency matrix for all iterations of other variables.
     n = 50
-    runs_per_theta = 10
+    runs_per_theta = 5
     num_unique_thetas = 6
     p1 = 0.9
-    p2 = 0.5
+    p2 = 0.7
     px = 0.01
 
     # Create variable set for trial runs.
@@ -56,7 +56,8 @@ def visualize(plot_dict, var_set, runs_per_theta, num_unique_thetas):
         for j in xrange(runs_per_theta):
             start_index = i
             plot_index = start_index+j*num_unique_thetas
-            axes[start_index].set_title(r'$\theta={}$'.format(var_set[i][4]))
+            # For mixed_theta, don't show theta titles.
+            #axes[start_index].set_title(r'$\theta={}$'.format(var_set[i][4]))
             axes[plot_index].imshow(plot_dict[i][j],interpolation='none', cmap='GnBu')
             axes[plot_index].tick_params(labelsize=6)
 
@@ -68,6 +69,10 @@ def visualize(plot_dict, var_set, runs_per_theta, num_unique_thetas):
 
 def sample_a(n, p_pos, p_neg, p_btwn, theta_fill_value, verbose):
     theta = np.empty([n, n]); theta.fill(theta_fill_value)
+    mixed_theta = True
+    if mixed_theta:
+        # Make arbitrary theta matrix to see effect on sampled A-matrices.
+        theta = make_mixed_theta(theta)
     z = sample_ising(theta)
     q = build_q_matrix(z, p_pos, p_neg, p_btwn)
     a = sample_sbm(q, n)
@@ -76,6 +81,20 @@ def sample_a(n, p_pos, p_neg, p_btwn, theta_fill_value, verbose):
     if verbose==True:
         summarize(n, p_pos, p_neg, p_btwn, theta_fill_value, z, q, a)
     return a
+
+def make_mixed_theta(theta):
+    """ Define mixed theta matrix."""
+    n = len(theta)
+    theta.fill(0)
+    if False:
+        np.fill_diagonal(theta, 5)
+        rng = np.arange(n-1); theta[rng, rng+1] = 5
+        rng = np.arange(n-2); theta[rng, rng+2] = 5
+        rng = np.arange(n-3); theta[rng, rng+3] = 5
+    if True:
+        theta[:, [0, 1, 2, 3, 4]] = 5
+    theta = sym_matrix(theta)
+    return theta
 
 def summarize(n, p_pos, p_neg, p_btwn, theta_fill_value, z, q, a):
     print('N: ', n)
@@ -112,6 +131,8 @@ def sample_adj_matrix(n, p):
     np.fill_diagonal(adj, 0)
     return adj
 
+def set_mixed_theta():
+    pass
 def build_q_matrix(z, p_pos, p_neg, p_btwn):
     """Builds q matrix from stochastic block model.
 
@@ -255,10 +276,8 @@ def sample_ising(theta):
             # pi(z_i|z_not_i) = (1/C)*exp(sum(theta*z_i*z_j)), for j's with
             #     edges to i [...actually, edge condition irrelevant here].
             # Evaluate for z_i=-1 and z_i=1, normalize, then sample.
-            summation_terms_neg1 = [-1*theta[i, j]*z[j]
-                if j>i else 0 for j in range(n)]
-            summation_terms_pos1 = [1*theta[i, j]*z[j]
-                if j>i else 0 for j in range(n)]
+            summation_terms_neg1 = [theta[i, j]*(-1)*z[j] if j!=i else 0 for j in range(n)]
+            summation_terms_pos1 = [theta[i, j]*(1)*z[j] if j!=i else 0 for j in range(n)]
             pn = unnorm_prob_neg1 = np.exp(sum(summation_terms_neg1))
             pp = unnorm_prob_pos1 = np.exp(sum(summation_terms_pos1))
             # Normalize probabilities.
